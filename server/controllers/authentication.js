@@ -1,10 +1,9 @@
 const express = require("express");
 const router = express.Router();
-//const bcrypt = require("bcryptjs")
 const user = require("../models/user")
 const jwt = require('jsonwebtoken');
 
-//register a new user
+//register 
 
 router.post("/api/users", async (req, res, next) => {
     const newUser = new user({
@@ -12,7 +11,6 @@ router.post("/api/users", async (req, res, next) => {
       lastName: req.body.lastName,
       phoneNumber: req.body.phoneNumber,
       email: req.body.email,
-     // password: bcrypt.hashSync(req.body.password, 10)
      password: req.body.password
     })
     try {
@@ -44,15 +42,6 @@ router.post('/api/users/login', (req, res, next) => {
           error: 'invalid credentials'
         })
       }
-      //incorrect password
-
-    //   if (!bcrypt.compareSync(req.body.password, user.password)) {
-    //     return res.status(401).json({
-    //       tite: 'login failed',
-    //       error: 'invalid credentials'
-    //     })
-    //   }
-      //IF ALL IS GOOD create a token and send to frontend
 
       try {
       let token = jwt.sign({ userId: user._id}, 'secretkey');
