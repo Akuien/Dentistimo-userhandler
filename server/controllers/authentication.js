@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const user = require("../models/user")
+const user = require("../models/user");
+const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
 
 //register 
@@ -11,7 +12,7 @@ router.post("/api/users", async (req, res, next) => {
       lastName: req.body.lastName,
       phoneNumber: req.body.phoneNumber,
       email: req.body.email,
-     password: req.body.password
+      password: bcrypt.hashSync(req.body.password, 10)
     })
     try {
       var savedUser = await newUser.save();
@@ -29,7 +30,6 @@ router.post("/api/users", async (req, res, next) => {
 
     
 //Login
-
 router.post('/api/users/login', (req, res, next) => {
     user.findOne({ email: req.body.email }, (err, user) => {
       if (err) return res.status(500).json({
@@ -39,6 +39,12 @@ router.post('/api/users/login', (req, res, next) => {
       if (!user) {
         return res.status(401).json({
           title: 'user not found',
+          error: 'invalid credentials'
+        })
+      }
+      if (!bcrypt.compareSync(req.body.password, user.password)) {
+        return res.status(401).json({
+          title: 'login failed',
           error: 'invalid credentials'
         })
       }
@@ -53,25 +59,23 @@ router.post('/api/users/login', (req, res, next) => {
     catch (err) {
       return res.status(400).json({
         title: 'error',
-        error: 'Unable To Login'
+        error: 'The login was not successful!'
       })
     }
     })
   })
   
-  //grabbing user info
-
   router.get('/api/user', (req, res, next) => {
-    let token = req.headers.token; //token
+    let token = req.headers.token; 
     jwt.verify(token, 'secretkey', (err, decoded) => {
       if (err) return res.status(401).json({
         title: 'unauthorized'
       })
-      //token is valid
+      
       user.findOne({ _id: decoded.userId }, (err, user) => {
         if (err) return console.log(err)
         return res.status(200).json({
-          title: 'user grabbed',
+          title: 'user info received ',
           user: {
             firstName: user.firstName,
             lastName: user.lastName,
