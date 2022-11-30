@@ -1,21 +1,20 @@
 const mqtt = require('mqtt')
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 
-
-const options = { //need to hide info in a confiq file
-  host: 'b38f131fe30e471dab185c4a2316c77f.s2.eu.hivemq.cloud',
-  port: 8883,
+const client = mqtt.connect({
+  host: process.env.HOST,
+  port: process.env.PORT,
   protocol: 'mqtts',
-  username: 'BrokerConnector',
-  password: '1234dentistimo1234'
-}
+  username: process.env.USERNAME,
+  password: process.env.PASSWORD
+})
 
-
-const client = mqtt.connect(options)
 client.on('connect', function () {
   console.log('Connected') // subscribe and publish to the same topic
-  client.subscribe('test', function (err) {
+  client.subscribe('user/auth', function (err) {
     if (!err) {
-      client.publish('test', 'Hello mqtt')
+      client.publish('user/auth', 'Hello mqtt')
     }
   })
 })
