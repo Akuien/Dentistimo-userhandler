@@ -3,9 +3,42 @@ const router = express.Router();
 const user = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
+const nodemailer = require("nodemailer");
+const { generateEmailTemplate } = require("../services/mails");
+
+// for sending email verification
+const sendVerifyMail = async (name, email, user_id) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      auth: {
+        user: "dentistimogroup5@gmail.com",
+        pass: "xhoevjhavlqgbhvn",
+      },
+    });
+    const mailOptions = {
+      from: "dentistimogroup5@gmail.com",
+      to: email,
+      subject: "Verify your account",
+      html: generateEmailTemplate(name, email, user_id),
+    };
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("email have been sent:- ", info.response);
+      }
+    });
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
 
 //register 
-
 router.post("/api/users", async (req, res, next) => {
     const newUser = new user({
       firstName: req.body.firstName,
@@ -16,6 +49,7 @@ router.post("/api/users", async (req, res, next) => {
     })
     try {
       var savedUser = await newUser.save();
+      sendVerifyMail(req.body.firstName, req.body.email, savedUser._id);
       res.status(200).json({
         savedUser,
         title: 'Signup Successful' })
@@ -88,6 +122,23 @@ router.post('/api/users/login', (req, res, next) => {
       })
   
     })
-  })
+  });
+
+
+  router.get("/api/verify/:id", async (req, res) => {
+  try {
+    const updateInfo = await user.updateOne(
+      { _id: req.params.id },
+      { $set: { verified: true } }
+    );
+
+    console.log(updateInfo);
+    return res.status(200).json({
+      message: "verified!",
+    });
+  } catch (error) {
+    console.log(error.message);
+  }
+  });
 
 module.exports = router;
