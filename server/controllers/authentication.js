@@ -1,10 +1,82 @@
-const express = require("express");
-const router = express.Router();
-const user = require("../models/user");
-const bcrypt = require("bcryptjs");
-const jwt = require('jsonwebtoken');
-const nodemailer = require("nodemailer");
-const { generateEmailTemplate } = require("../services/mails");
+//
+//const router = express.Router();
+//const user = require("../models/user");
+const bcrypt = require("bcrypt");
+//const jwt = require('jsonwebtoken');
+//const nodemailer = require("nodemailer");
+//const { generateEmailTemplate } = require("../services/mails");
+
+
+//var mongoose = require('mongoose');
+
+/* mongoose.connect(mongoURI,
+  {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+  }, function (err) {
+      if (err) {
+          console.error(`Failed to connect to MpngoDB with URI: ${mongoURI}`);
+          console.error(err.stack);
+          process.exit(1);
+      }
+      console.log(`Connected to MongoDB with URI: ${mongoURI}`);
+  }); */
+
+
+//mqtt connection
+var mqtt = require('mqtt');
+
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, './.env') })
+
+options = {
+  host: '45fb8d87df7040eb8434cea2937cfb31.s1.eu.hivemq.cloud',
+  port: 8883,
+  protocol: 'mqtts',
+  username: 'Team5@Broker',
+  password: 'Team5@Broker'
+} 
+
+var client = mqtt.connect(options);
+
+// setup the callbacks
+client.on('connect', function () {
+  console.log('Connected Successfully');
+  console.log('Listening...');
+});
+
+client.on('error', function (error) {
+  console.log(error);
+});
+
+//client.subscribe(UserInfo/test)
+
+/* const authenticateUser = function (topic, payload) {
+  
+} */ 
+
+client.subscribe('UserInfo/test', function () {
+  // When a message arrives, print it to the console
+  client.on('message', function (topic, message) {
+
+    console.log("Received '" + message + "' on '" + topic + "'")
+    
+    const userInfo = JSON.parse(message);
+
+    const newUser = {
+      firstName: userInfo.firstName,
+      lastName: userInfo.lastName,
+      phoneNumber: userInfo.phoneNumber,
+      email: userInfo.email,
+      password: bcrypt.hashSync(userInfo.password, 10)
+    }
+/*       var savedUser = newUser.save();
+      sendVerifyMail(userInfo.firstName, userInfo.email, savedUser._id); */
+  })
+})
+
+
+/*
 
 // for sending email verification
 const sendVerifyMail = async (name, email, user_id) => {
@@ -60,8 +132,7 @@ router.post("/api/users", async (req, res, next) => {
         error: 'email in use'
       })
     }
-    });
-
+    }); 
     
 //Login
 router.post('/api/users/login', (req, res, next) => {
@@ -141,4 +212,4 @@ router.post('/api/users/login', (req, res, next) => {
   }
   });
 
-module.exports = router;
+module.exports = router;   */
