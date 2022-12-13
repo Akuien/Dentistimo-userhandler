@@ -1,13 +1,13 @@
 //
 //const router = express.Router();
-//const user = require("../models/user");
+const user = require("../models/user");
 const bcrypt = require("bcrypt");
 //const jwt = require('jsonwebtoken');
 //const nodemailer = require("nodemailer");
 //const { generateEmailTemplate } = require("../services/mails");
 
 
-//var mongoose = require('mongoose');
+var mongoose = require('mongoose');
 
 /* mongoose.connect(mongoURI,
   {
@@ -23,21 +23,31 @@ const bcrypt = require("bcrypt");
   }); */
 
 
+
+  // Variables
+var mongoURI = process.env.MONGODB_URI || 'mongodb+srv://Dentistimo:QsyJymgvpYZZeJPc@cluster0.hnkdpp5.mongodb.net/?retryWrites=true&w=majority';
+//var port = process.env.PORT || 3000;
+
+// Connect to MongoDB
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true }, function(err) {
+    if (err) {
+        console.error(`Failed to connect to MongoDB with URI: ${mongoURI}`);
+        console.error(err.stack);
+        process.exit(1);
+    }
+    console.log(`Connected to MongoDB with URI: ${mongoURI}`);
+});
+
 //mqtt connection
 var mqtt = require('mqtt');
 
 const path = require('path')
 require('dotenv').config({ path: path.resolve(__dirname, './.env') })
 
-options = {
-  host: '45fb8d87df7040eb8434cea2937cfb31.s1.eu.hivemq.cloud',
-  port: 8883,
-  protocol: 'mqtts',
-  username: 'Team5@Broker',
-  password: 'Team5@Broker'
-} 
 
-var client = mqtt.connect(options);
+const options = process.env.OPTIONS
+
+const client = mqtt.connect(options)
 
 // setup the callbacks
 client.on('connect', function () {
@@ -63,17 +73,62 @@ client.subscribe('UserInfo/test', function () {
     
     const userInfo = JSON.parse(message);
 
-    const newUser = {
+    const newUser = new user({
       firstName: userInfo.firstName,
       lastName: userInfo.lastName,
       phoneNumber: userInfo.phoneNumber,
       email: userInfo.email,
       password: bcrypt.hashSync(userInfo.password, 10)
-    }
-/*       var savedUser = newUser.save();
-      sendVerifyMail(userInfo.firstName, userInfo.email, savedUser._id); */
+    })
+
+    console.log(newUser)
+    var savedUser = newUser.save();
   })
 })
+
+/*
+registerNewCompany =  function(req, res) {
+  if(req.body.company_email && req.body.password){
+      Company.find({company_email: req.body.company_email}, function(err, company){
+          if(err){
+              return res.status(409).json({'message': 'Not able to register Company!', 'error': err});
+          }
+          if(company.length >= 1){
+              return res.status(409).json({
+                  message: 'A company with such email address already exists'
+              });
+          }
+          bcrypt.hash(req.body.password,8,(err,hash) => {
+              if(err){return res.status(500).json({error: err});}
+              else{
+                  var company = new Company({
+
+                      _id: new mongoose.Types.ObjectId()  ,
+                      company_name : req.body.company_name,
+                      company_description : req.body.company_description,
+                      company_location : req.body.company_location,
+                      company_email : req.body.company_email,
+                      company_phone : req.body.company_phone,
+                      password : hash,
+                      job_posts : []
+                  });
+                  let data = company;
+                  const token = jwt.sign({_id: company._id, email: company.company_email, name: company.company_name}, "secret");
+                  company.tokens.push({token});
+                  company.save(function(err, data) {
+                      if (err) { return res.status(409).json({'message': 'Company unvailable!', 'error': err}); }
+                      res.status(201).json({data, token});
+                  }); 
+              }
+          });
+      });
+  }
+  else {
+      return res.status(409).json({
+          message: 'Please provide email and password'
+      });
+  }
+};
 
 
 /*
@@ -213,3 +268,69 @@ router.post('/api/users/login', (req, res, next) => {
   });
 
 module.exports = router;   */
+
+
+registerNewCompany =  function(req, res) {
+  if(req.body.company_email && req.body.password){
+      Company.find({company_email: req.body.company_email}, function(err, company){
+          if(err){
+              return res.status(409).json({'message': 'Not able to register Company!', 'error': err});
+          }
+          if(company.length >= 1){
+              return res.status(409).json({
+                  message: 'A company with such email address already exists'
+              });
+          }
+          bcrypt.hash(req.body.password,8,(err,hash) => {
+              if(err){return res.status(500).json({error: err});}
+              else{
+                  var company = new Company({
+
+                      _id: new mongoose.Types.ObjectId()  ,
+                      company_name : req.body.company_name,
+                      company_description : req.body.company_description,
+                      company_location : req.body.company_location,
+                      company_email : req.body.company_email,
+                      company_phone : req.body.company_phone,
+                      password : hash,
+                      job_posts : []
+                  });
+                  let data = company;
+                  const token = jwt.sign({_id: company._id, email: company.company_email, name: company.company_name}, "secret");
+                  company.tokens.push({token});
+                  company.save(function(err, data) {
+                      if (err) { return res.status(409).json({'message': 'Company unvailable!', 'error': err}); }
+                      res.status(201).json({data, token});
+                  }); 
+              }
+          });
+      });
+  }
+  else {
+      return res.status(409).json({
+          message: 'Please provide email and password'
+      });
+  }
+};  
+
+
+
+
+login = (message) => {
+    const email = message.email;
+    const password = message.password;
+
+    User.find({email: email}, function(err, user){
+      if (err) { return next(err); }
+      console.log(company)
+      if (!company) {
+          return res.status(404).json({ error: "Account does not exist." });
+      }
+      if (bcrypt.compare(password, company.password)){
+          const token = jwt.sign({_id: company._id, email: company.company_email, name: company.company_name}, "secret");
+          res.status(201).json({ company, token });    
+      } else {
+          return res.status(400).json({error: 'Email or password incorrect.'})
+      }
+   }).catch((err) => {return res.send(err);});
+  }; 

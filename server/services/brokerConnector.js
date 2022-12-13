@@ -1,14 +1,10 @@
 const mqtt = require('mqtt')
-const path = require('path')
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 
-const client = mqtt.connect({
-  host: process.env.HOST,
-  port: process.env.PORT,
-  protocol: 'mqtts',
-  username: process.env.USERNAME,
-  password: process.env.PASSWORD
-})
+require('dotenv').config();
+
+const options = process.env.OPTIONS
+
+const client = mqtt.connect(options)
 
 client.on('connect', function () {
   console.log('Connected') // subscribe and publish to the same topic
@@ -20,14 +16,10 @@ client.on('connect', function () {
 })
 
 // prints a received message
-client.on('message', function (topic, message) {
+client.on('message', function (message) {
   console.log(String.fromCharCode.apply(null, message)) // need to convert the byte array to string
 })
 
-
-client.on('connect', () => {
-  console.log('Connected!')
-})
 
 
 client.on('error', (error) => {
@@ -35,3 +27,28 @@ client.on('error', (error) => {
 })
 
 
+client.on('connect', function () {
+  client.subscribe('user/auth', function () {
+
+  })
+  /*
+  // Publish a new message every 4 seconds
+  setInterval(function () {
+    const rand = Math.random() * 100
+    client.publish('user/auth', String(rand), function () {
+      console.log('Pushed: ' + rand)
+    // client.end();
+    })
+  }, 4000) */
+}) 
+
+
+client.on('connect', function () { // When connected
+  // Subscribe to a topic
+  client.subscribe('user/auth', function () {
+    // When a message arrives, print it to the console
+    client.on('message', function (topic, message, packet) {
+      console.log("Received '" + message + "' on '" + topic + "'")
+    })
+  })
+})
