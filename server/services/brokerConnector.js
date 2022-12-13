@@ -1,4 +1,4 @@
-const mqtt = require('mqtt')
+/* const mqtt = require('mqtt')
 
 require('dotenv').config();
 
@@ -39,7 +39,7 @@ client.on('connect', function () {
       console.log('Pushed: ' + rand)
     // client.end();
     })
-  }, 4000) */
+  }, 4000) 
 }) 
 
 
@@ -51,4 +51,4 @@ client.on('connect', function () { // When connected
       console.log("Received '" + message + "' on '" + topic + "'")
     })
   })
-})
+}) */
