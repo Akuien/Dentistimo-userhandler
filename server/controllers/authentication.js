@@ -92,7 +92,7 @@ client.subscribe('UserInfo/test', function () {
 
     console.log(newUser)
     var savedUser = newUser.save();
-    //sendVerifyMail(savedUser);
+    sendVerifyMail(userInfo.firstName, userInfo.email, savedUser._id);
   })
 })
 
@@ -188,10 +188,10 @@ registerNewCompany =  function(req, res) {
 */
 
 // for sending email verification
-const sendVerifyMail = async (savedUser) => {
-  var name = savedUser.firstName
-  var email = savedUser.email
-  var user_id = User._id
+const sendVerifyMail = async (userFirstName, userEmail, userId) => {
+  var name = userFirstName
+  var email = userEmail
+  var user_id = userId
 
   try {
     const transporter = nodemailer.createTransport({
@@ -206,7 +206,7 @@ const sendVerifyMail = async (savedUser) => {
     });
     const mailOptions = {
       from: "dentistimogroup5@gmail.com",
-      to: email,
+      to: userEmail,
       subject: "Verify your account",
       html: generateEmailTemplate(name, email, user_id),
     };
