@@ -41,6 +41,7 @@ const client = mqtt.connect(options)
 
 client.subscribe('UserInfo/test')
 client.subscribe('LoginInfo/test')
+client.subscribe('Users/verify')
 
 // setup the callbacks
 client.on('connect', function () {
@@ -67,7 +68,7 @@ client.on('connect', function () {
     
       console.log(newUser)
       var savedUser = newUser.save();
-      sendVerifyMail(userInfo.firstName, userInfo.email, savedUser._id);
+      sendVerifyMail(userInfo.firstName, userInfo.email, newUser._id);
   
       //Login
     } else if(topic === 'LoginInfo/test')  {
@@ -97,15 +98,25 @@ client.on('connect', function () {
           return (error)
         }
   
-    }
-    
-  })
-
+    } else if (topic === 'Users/verify') {
+      const updateUser = JSON.parse(message)
+      const filter = { _id: updateUser.user_id };
+      const update = { verified: true };
+      try {
+      let verifiedUser = await User.findOneAndUpdate(filter, update, {
+        new: true}
+      )
+      console.log(verifiedUser);
+    }catch (error) {
+          return (error)
+        }
+  }})
 });
 
 client.on('error', function (error) {
   console.log(error);
 });
+
 
 
 
