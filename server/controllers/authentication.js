@@ -1,27 +1,11 @@
-//
-//const router = express.Router();
+
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
-//const jwt = require('jsonwebtoken');
 const nodemailer = require("nodemailer");
 const { generateEmailTemplate } = require("../services/mails");
 
 
 var mongoose = require('mongoose');
-
-/* mongoose.connect(mongoURI,
-  {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-  }, function (err) {
-      if (err) {
-          console.error(`Failed to connect to MpngoDB with URI: ${mongoURI}`);
-          console.error(err.stack);
-          process.exit(1);
-      }
-      console.log(`Connected to MongoDB with URI: ${mongoURI}`);
-  }); */
-
 
 
   // Variables
@@ -55,137 +39,77 @@ const options = {
 
 const client = mqtt.connect(options)
 
+client.subscribe('UserInfo/test')
+client.subscribe('LoginInfo/test')
+
 // setup the callbacks
 client.on('connect', function () {
   console.log('Connected Successfully');
   console.log('Listening...');
+
+  client.on('message', async function (topic, message) {
+
+    console.log("Received '" + message + "' on '" + topic + "'")
+  
+    //signUp
+    if(topic === 'UserInfo/test') {
+  
+      const userInfo = JSON.parse(message);
+  
+      const newUser = new User({
+        firstName: userInfo.firstName,
+        lastName: userInfo.lastName,
+        phoneNumber: userInfo.phoneNumber,
+        email: userInfo.email,
+        password: userInfo.password
+        //password: bcrypt.hashSync(userInfo.password, 10)
+      })
+    
+      console.log(newUser)
+      var savedUser = newUser.save();
+      sendVerifyMail(userInfo.firstName, userInfo.email, savedUser._id);
+  
+      //Login
+    } else if(topic === 'LoginInfo/test')  {
+  
+      const loginInfo = JSON.parse(message);
+  
+      var insertedEmail = loginInfo.email
+      var insertedPassword = loginInfo.password
+
+      try {
+        const user = await User.findOne( {email: insertedEmail, password: insertedPassword})
+        if (user === null) {
+          console.log("email error")
+        } else if (insertedPassword !== user.password) {
+          console.log("invalid pass")
+        } else {
+          let validateUser = JSON.stringify(user)
+          client.publish("pub/loginResponse", validateUser, 1, (error) => {
+            if (error) {
+              console.log(error)
+            }else {
+              console.log(validateUser, 'ok')
+            }
+          })
+        }
+      }catch (error) {
+          return (error)
+        }
+  
+    }
+    
+  })
+
 });
 
 client.on('error', function (error) {
   console.log(error);
 });
 
-//client.subscribe(UserInfo/test)
-
-/* const authenticateUser = function (topic, payload) {
-  
-} */ 
 
 
 
-client.subscribe('UserInfo/test', function () {
-  // When a message arrives, print it to the console
-  client.on('message', function (topic, message) {
-
-    console.log("Received '" + message + "' on '" + topic + "'")
-    
-    const userInfo = JSON.parse(message);
-
-
-    const newUser = new User({
-      firstName: userInfo.firstName,
-      lastName: userInfo.lastName,
-      phoneNumber: userInfo.phoneNumber,
-      email: userInfo.email,
-      password: bcrypt.hashSync(userInfo.password, 10)
-    })
-
-    console.log(newUser)
-    var savedUser = newUser.save();
-    sendVerifyMail(userInfo.firstName, userInfo.email, savedUser._id);
-  })
-})
-
-
-client.subscribe('LoginInfo/test', function () {
-  // When a message arrives, print it to the console
-  client.on('message', async function (topic, message) {
-
-    console.log("Received '" + message + "' on '" + topic + "'")
-
-    const loginInfo = JSON.parse(message);
-
-    // const loginInfo =  {
-    //   email: this.form.email,
-    //   password: this.form.password
-    // }
-
-if(topic === 'LoginInfo/test') {
-  console.log(message.toString())
-  var emailMessage = JSON.parse(message)
-  var passwordMessage = JSON.parse(message)
-  var insertedEmail = emailMessage.email
-  var insertedPassword = passwordMessage.password
-}
-  try {
-    const user =  await User.findOne( {email: insertedEmail, password: insertedPassword})
-    if (user === null) {
-      console.log("email error")
-    } else if (insertedPassword !== user.password) {
-      console.log("invalid pass")
-    } else {
-      let validateUser = JSON.stringify(user)
-      client.publish("pub/loginResponse", validateUser, 1, (error) => {
-        if (error) {
-          console.log(error)
-        }else {
-          console.log(validateUser, 'ok')
-        }
-      })
-    }
-  }catch (error) {
-      return (error)
-    }
-  })
-})
-
-
-/*
-registerNewCompany =  function(req, res) {
-  if(req.body.company_email && req.body.password){
-      Company.find({company_email: req.body.company_email}, function(err, company){
-          if(err){
-              return res.status(409).json({'message': 'Not able to register Company!', 'error': err});
-          }
-          if(company.length >= 1){
-              return res.status(409).json({
-                  message: 'A company with such email address already exists'
-              });
-          }
-          bcrypt.hash(req.body.password,8,(err,hash) => {
-              if(err){return res.status(500).json({error: err});}
-              else{
-                  var company = new Company({
-
-                      _id: new mongoose.Types.ObjectId()  ,
-                      company_name : req.body.company_name,
-                      company_description : req.body.company_description,
-                      company_location : req.body.company_location,
-                      company_email : req.body.company_email,
-                      company_phone : req.body.company_phone,
-                      password : hash,
-                      job_posts : []
-                  });
-                  let data = company;
-                  const token = jwt.sign({_id: company._id, email: company.company_email, name: company.company_name}, "secret");
-                  company.tokens.push({token});
-                  company.save(function(err, data) {
-                      if (err) { return res.status(409).json({'message': 'Company unvailable!', 'error': err}); }
-                      res.status(201).json({data, token});
-                  }); 
-              }
-          });
-      });
-  }
-  else {
-      return res.status(409).json({
-          message: 'Please provide email and password'
-      });
-  }
-};
-
-
-*/
 
 // for sending email verification
 const sendVerifyMail = async (userFirstName, userEmail, userId) => {
@@ -221,6 +145,9 @@ const sendVerifyMail = async (userFirstName, userEmail, userId) => {
     console.log(error.message);
   }
 };
+
+//========================================================================================================================================
+
 
 /*
 //register 
@@ -330,20 +257,51 @@ module.exports = router;   */
 
 /*
 login = (message) => {
-    const email = message.email;
-    const password = message.password;
+    const insertedEmail = message.email;
+    const insertedPassword = message.password;
 
     User.find({email: email}, function(err, user){
       if (err) { return next(err); }
-      console.log(company)
-      if (!company) {
-          return res.status(404).json({ error: "Account does not exist." });
+      console.log(user)
+      if (!user) {
+          return ({ error: "Account does not exist." });
       }
-      if (bcrypt.compare(password, company.password)){
-          const token = jwt.sign({_id: company._id, email: company.company_email, name: company.company_name}, "secret");
-          res.status(201).json({ company, token });    
+      if (bcrypt.compare(insertedPassword, user.password)){
+          console.log('Login successful')
       } else {
-          return res.status(400).json({error: 'Email or password incorrect.'})
+          console.log('incorrent password')
       }
    }).catch((err) => {return res.send(err);});
-  }; */
+  }; 
+
+        const checkPass = async (reqPass, pass) => await bcrypt.compare(reqPass, pass);
+  
+        try {
+        const user = User.findOne( {email: insertedEmail, password: insertedPassword})    
+        .then(async (foundUser) => {
+          if (!foundUser) {
+            return { authenticated: false, message: "User not found" };
+          }
+          console.log('user = '+ user)
+          console.log('user = '+ foundUser)
+          const isCorrectPass = await checkPass(insertedPassword, foundUser.password);
+          if (isCorrectPass) {
+            let validateUser = JSON.stringify(user)
+            client.publish("pub/loginResponse", validateUser, 1, (error) => {
+              if (error) {
+                console.log(error)
+              }else {
+                console.log(validateUser, 'ok')
+              }
+            })
+            return { authenticated: true, message: foundUser };
+    
+          } else {
+            return { authenticated: false, message: "incorrect password" };
+          }
+        })
+        } catch (error) {
+          return (error)
+        }
+  
+  */
