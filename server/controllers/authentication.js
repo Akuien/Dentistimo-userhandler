@@ -42,6 +42,7 @@ const client = mqtt.connect(options)
 client.subscribe('UserInfo/test')
 client.subscribe('LoginInfo/test')
 client.subscribe('Users/verify')
+client.subscribe('user/updateUser')
 
 // setup the callbacks
 client.on('connect', function () {
@@ -110,16 +111,58 @@ client.on('connect', function () {
     }catch (error) {
           return (error)
         }
-  }})
+  }
+
+  // update user information
+  else if(topic === 'user/updateUser') {
+    const updateUser = JSON.parse(message)
+    
+      console.log(updateUser, "info")
+      let user = ({
+        firstName: updateUser.firstName,
+        lastName: updateUser.lastName,
+        email: updateUser.email,
+        phoneNumber: updateUser.phoneNumber,
+        password: updateUser.password
+      })
+      try {
+        let newUser = await User.findOneAndUpdate({_id: updateUser.id}, user, {new: true});
+        console.log(newUser, "newUser")
+        var id = updateUser.id;
+        var UserErr = "user couldn't update"
+        const Targetuser = User.find({_id: id})
+  
+        if (Targetuser !== null) {
+          let userUpdat = JSON.stringify(newUser)
+          client.publish("ui/userUpdated", userUpdat, 1, (error) => {
+            if (error) {
+              console.log(error)
+            } else {
+              console.log("user updated")
+            }
+          })
+  
+        } else {
+          client.publish("ui/UserError", UserErr, 1, (error) => {
+            if (error) {
+              console.log(error)
+            } else {
+              console.log("error message sent back")
+            }
+          })
+        }
+      }
+      catch (error) {
+        return (error)
+      }
+    }
+
+})
 });
 
 client.on('error', function (error) {
   console.log(error);
 });
-
-
-
-
 
 
 // for sending email verification
