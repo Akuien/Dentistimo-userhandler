@@ -6,24 +6,6 @@ var mqtt = require('mqtt');
 const path = require('path')
 require('dotenv').config({ path: path.resolve(__dirname, './.env') })
 
-
-/* var mongoose = require('mongoose');
-
-
-  // Variables
-var mongoURI = process.env.MONGODB_URI || 'mongodb+srv://Dentistimo:QsyJymgvpYZZeJPc@cluster0.hnkdpp5.mongodb.net/?retryWrites=true&w=majority';
-//var port = process.env.PORT || 3000;
-
-// Connect to MongoDB
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true }, function(err) {
-    if (err) {
-        console.error(`Failed to connect to MongoDB with URI: ${mongoURI}`);
-        console.error(err.stack);
-        process.exit(1);
-    }
-    console.log(`Connected to MongoDB with URI: ${mongoURI}`);
-}); */
-
 const options = {
   host: '45fb8d87df7040eb8434cea2937cfb31.s1.eu.hivemq.cloud',
   port: 8883,
