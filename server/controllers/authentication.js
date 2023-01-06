@@ -35,7 +35,7 @@ const options = {
 const client = mqtt.connect(options)
 
 client.subscribe('UserInfo/test')
-client.subscribe('LoginInfo/test')
+client.subscribe('user/login/request')
 client.subscribe('Users/verify')
 client.subscribe('user/updateUser')
 
@@ -67,10 +67,9 @@ client.on('connect', function () {
       sendVerifyMail(userInfo.firstName, userInfo.email, newUser._id);
   
       //Login
-    } else if(topic === 'LoginInfo/test')  {
+    } else if(topic === 'user/login/request')  {
   
       const loginInfo = JSON.parse(message);
-  
       var insertedEmail = loginInfo.email
       var insertedPassword = loginInfo.password
 
@@ -82,11 +81,12 @@ client.on('connect', function () {
           console.log("invalid pass")
         } else {
           let validateUser = JSON.stringify(user)
-          client.publish("pub/loginResponse", validateUser, 1, (error) => {
+
+          client.publish("user/login/response", validateUser, { qos: 1, retain: false }, (error) => {
             if (error) {
               console.log(error)
             }else {
-              console.log(validateUser, 'ok')
+              console.log(validateUser, 'User authaurized')
             }
           })
         }
