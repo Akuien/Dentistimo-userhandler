@@ -1,11 +1,13 @@
-
 const User = require("../models/user");
-const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const { generateEmailTemplate } = require("../services/mails");
+var database = require('../Database/database');
+var mqtt = require('mqtt');
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, './.env') })
 
 
-var mongoose = require('mongoose');
+/* var mongoose = require('mongoose');
 
 
   // Variables
@@ -20,14 +22,7 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true }, 
         process.exit(1);
     }
     console.log(`Connected to MongoDB with URI: ${mongoURI}`);
-});
-
-//mqtt connection
-var mqtt = require('mqtt');
-
-const path = require('path')
-require('dotenv').config({ path: path.resolve(__dirname, './.env') })
-
+}); */
 
 const options = {
   host: '45fb8d87df7040eb8434cea2937cfb31.s1.eu.hivemq.cloud',
