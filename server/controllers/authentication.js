@@ -37,7 +37,7 @@ const client = mqtt.connect(options)
 client.subscribe('user/signUp/request')
 client.subscribe('user/login/request')
 client.subscribe('Users/verify')
-client.subscribe('user/updateUser')
+client.subscribe('user/updateUser/request')
 
 // setup the callbacks
 client.on('connect', function () {
@@ -107,7 +107,7 @@ client.on('connect', function () {
         }
   }
  // update user information
-  else if(topic === 'user/updateUser') {
+  else if(topic === 'user/updateUser/request') {
     const updateUser = JSON.parse(message)
     
       console.log(updateUser, "info")
@@ -128,7 +128,7 @@ client.on('connect', function () {
         if (Targetuser !== null) {
           let userUpdat = JSON.stringify(newUser)
 
-          client.publish("ui/userUpdated", userUpdat, { qos: 1, retain: false }, (error) => {
+          client.publish("user/updateUser/response", userUpdat, { qos: 1, retain: false }, (error) => {
             if (error) {
               console.log(error)
             } else {
