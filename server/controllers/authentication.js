@@ -1,11 +1,13 @@
-
 const User = require("../models/user");
-const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const { generateEmailTemplate } = require("../services/mails");
+var database = require('../Database/database');
+var mqtt = require('mqtt');
+const path = require('path')
+require('dotenv').config({ path: path.resolve(__dirname, './.env') })
 
 
-var mongoose = require('mongoose');
+/* var mongoose = require('mongoose');
 
 
   // Variables
@@ -20,14 +22,7 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true }, 
         process.exit(1);
     }
     console.log(`Connected to MongoDB with URI: ${mongoURI}`);
-});
-
-//mqtt connection
-var mqtt = require('mqtt');
-
-const path = require('path')
-require('dotenv').config({ path: path.resolve(__dirname, './.env') })
-
+}); */
 
 const options = {
   host: '45fb8d87df7040eb8434cea2937cfb31.s1.eu.hivemq.cloud',
@@ -40,7 +35,7 @@ const options = {
 const client = mqtt.connect(options)
 
 client.subscribe('UserInfo/test')
-client.subscribe('LoginInfo/test')
+client.subscribe('user/login/request')
 client.subscribe('Users/verify')
 client.subscribe('user/updateUser')
 
@@ -72,10 +67,9 @@ client.on('connect', function () {
       sendVerifyMail(userInfo.firstName, userInfo.email, newUser._id);
   
       //Login
-    } else if(topic === 'LoginInfo/test')  {
+    } else if(topic === 'user/login/request')  {
   
       const loginInfo = JSON.parse(message);
-  
       var insertedEmail = loginInfo.email
       var insertedPassword = loginInfo.password
 
@@ -87,11 +81,12 @@ client.on('connect', function () {
           console.log("invalid pass")
         } else {
           let validateUser = JSON.stringify(user)
-          client.publish("pub/loginResponse", validateUser, 1, (error) => {
+
+          client.publish("user/login/response", validateUser, { qos: 1, retain: false }, (error) => {
             if (error) {
               console.log(error)
             }else {
-              console.log(validateUser, 'ok')
+              console.log(validateUser, 'User authaurized')
             }
           })
         }
