@@ -34,7 +34,7 @@ const options = {
 
 const client = mqtt.connect(options)
 
-client.subscribe('UserInfo/test')
+client.subscribe('user/signUp/request')
 client.subscribe('user/login/request')
 client.subscribe('Users/verify')
 client.subscribe('user/updateUser')
@@ -49,21 +49,20 @@ client.on('connect', function () {
     console.log("Received '" + message + "' on '" + topic + "'")
   
     //signUp
-    if(topic === 'UserInfo/test') {
+    if(topic === 'user/signUp/request') {
   
       const userInfo = JSON.parse(message);
-  
-      const newUser = new User({
+        const newUser = new User({
         firstName: userInfo.firstName,
         lastName: userInfo.lastName,
         phoneNumber: userInfo.phoneNumber,
         email: userInfo.email,
         password: userInfo.password
-        //password: bcrypt.hashSync(userInfo.password, 10)
       })
     
       console.log(newUser)
       var savedUser = newUser.save();
+      
       sendVerifyMail(userInfo.firstName, userInfo.email, newUser._id);
   
       //Login
@@ -107,8 +106,7 @@ client.on('connect', function () {
           return (error)
         }
   }
-
-  // update user information
+ // update user information
   else if(topic === 'user/updateUser') {
     const updateUser = JSON.parse(message)
     
@@ -129,7 +127,8 @@ client.on('connect', function () {
   
         if (Targetuser !== null) {
           let userUpdat = JSON.stringify(newUser)
-          client.publish("ui/userUpdated", userUpdat, 1, (error) => {
+
+          client.publish("ui/userUpdated", userUpdat, { qos: 1, retain: false }, (error) => {
             if (error) {
               console.log(error)
             } else {
