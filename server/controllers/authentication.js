@@ -55,7 +55,7 @@ client.on('connect', function () {
       var insertedPassword = loginInfo.password
 
       try {
-        const user = await User.findOne( {email: insertedEmail, password: insertedPassword})
+        const user = await User.findOne( {email: insertedEmail})
         if (user === null) {
           console.log("email error")
         } else if (insertedPassword !== user.password) {
