@@ -4,15 +4,12 @@
 The user handler is responsible for handling user information sent to it by the user interface component. The information will either be saved to the database creating a new user, used for authentication of the user by matching provided data with data saved in the database, or used to verify the users email address.
 
 ## Component Responsibilities
+
+* Hnadle creation of new accountts
 * Save user data in the database
-
 * Authentication of users 
-
 * Verification of users’ email address
-
-* Listen to MQTT for user data requests from the user interface component
-
-* Publish user data via MQTT
+* Updating users personal information
 
 ## Architectural style
 - **Publish and subscribe:**
@@ -39,7 +36,7 @@ Authors and acknowledgment(Team Members)
 * Cynthia Tarwireyi
 * Nazli Moghaddam
 * Jonna Johansson
-* Sergey Balan
+
 ##
 **More details about this system can be found in:** [Documentation](https://git.chalmers.se/courses/dit355/dit356-2022/t-5/t-5-documentation)
 
