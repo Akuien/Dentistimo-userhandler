@@ -56,14 +56,20 @@ client.on('connect', function () {
 
       try {
         const user = await User.findOne( {email: insertedEmail})
-        if (user === null) {
-          console.log("email error")
-        } else if (insertedPassword !== user.password) {
-          console.log("invalid pass")
+        if (user === null || insertedPassword !== user.password ) {
+          let validateUser = JSON.stringify(user)
+
+          client.publish("user/login/response/notApproved", validateUser, { qos: 1, retain: false }, (error) => {
+            if (error) {
+              console.log(error)
+            }else {
+              console.log("incorrect credentials")
+            }
+          })
         } else {
           let validateUser = JSON.stringify(user)
 
-          client.publish("user/login/response", validateUser, { qos: 1, retain: false }, (error) => {
+          client.publish("user/login/response/approved", validateUser, { qos: 1, retain: false }, (error) => {
             if (error) {
               console.log(error)
             }else {
