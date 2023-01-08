@@ -29,7 +29,7 @@ This component uses the following dependencies:
 Get started:
 1. Clone the repository
 2. To Install the component dependencies run `npm install` in the terminal 
-3. To run the component, do: `cd server` and `cd controllers` then `node authentication.js`
+3. To run the component, do: `cd server` then `node app.js`
 
 
 Authors and acknowledgment(Team Members)
