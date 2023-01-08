@@ -1,4 +1,4 @@
-const User = require("../models/user");
+/* const User = require("../models/user");
 const nodemailer = require("nodemailer");
 const { generateEmailTemplate } = require("../services/mails");
 var database = require('../Database/database');
@@ -180,4 +180,4 @@ const sendVerifyMail = async (userFirstName, userEmail, userId) => {
   } catch (error) {
     console.log(error.message);
   }
-};
+}; */

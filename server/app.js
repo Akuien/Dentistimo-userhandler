@@ -1,11 +1,8 @@
-/* const User = require("../models/user");
+const User = require("./models/user");
 const nodemailer = require("nodemailer");
-const { generateEmailTemplate } = require("../services/mails");
-var database = require('../Database/database');
+const { generateEmailTemplate } = require("./services/mails");
+var database = require('./Database/database');
 var mqtt = require('mqtt');
-const path = require('path')
-require('dotenv').config({ path: path.resolve(__dirname, './.env') })
-
 
 const options = {
   host: '45fb8d87df7040eb8434cea2937cfb31.s1.eu.hivemq.cloud',
@@ -22,7 +19,6 @@ client.subscribe('user/login/request')
 client.subscribe('Users/verify')
 client.subscribe('user/updateUser/request')
 
-// setup the callbacks
 client.on('connect', function () {
   console.log('Connected Successfully');
   console.log('Listening...');
@@ -56,15 +52,21 @@ client.on('connect', function () {
       var insertedPassword = loginInfo.password
 
       try {
-        const user = await User.findOne( {email: insertedEmail, password: insertedPassword})
-        if (user === null) {
-          console.log("email error")
-        } else if (insertedPassword !== user.password) {
-          console.log("invalid pass")
+        const user = await User.findOne( {email: insertedEmail})
+        if (user === null || insertedPassword !== user.password ) {
+          let validateUser = JSON.stringify(user)
+
+          client.publish("user/login/response/notApproved", validateUser, { qos: 1, retain: false }, (error) => {
+            if (error) {
+              console.log(error)
+            }else {
+              console.log("incorrect credentials")
+            }
+          })
         } else {
           let validateUser = JSON.stringify(user)
 
-          client.publish("user/login/response", validateUser, { qos: 1, retain: false }, (error) => {
+          client.publish("user/login/response/approved", validateUser, { qos: 1, retain: false }, (error) => {
             if (error) {
               console.log(error)
             }else {
@@ -75,7 +77,7 @@ client.on('connect', function () {
       }catch (error) {
           return (error)
         }
-  
+  //Verify new users email
     } else if (topic === 'Users/verify') {
       const updateUser = JSON.parse(message)
       const filter = { _id: updateUser.user_id };
@@ -175,4 +177,4 @@ const sendVerifyMail = async (userFirstName, userEmail, userId) => {
   } catch (error) {
     console.log(error.message);
   }
-}; */
+};
